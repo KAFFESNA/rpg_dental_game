@@ -4,7 +4,7 @@
 # Author: NZK
 # RPG battle sim focused around dental hygiene.
 import random
-
+import time
 # Main Function - Hub for battle
 def main():
     # =====------------------Stats and moves assigned to each character------------------=====
@@ -13,7 +13,7 @@ def main():
     moves = {
         "Slap":("Rock", 20, "Phys", 6),
         "Whiten":("Normal", 50, "Heal", 10),
-        "Paste Blast":("Paper", 25, "Spec", 4),
+        "Paste Blast":("Paper", 25, "Spec", 5),
         "Floss Whip":("Scissors", 30, "Phys", 12),
         "Clean Punch":("Rock", 30, "Phys", 10),
         "Brush Bash":("Rock", 40, "Phys", 16),
@@ -46,44 +46,43 @@ def main():
     player_hp_sp = {"hp":player_stats["hp"], "sp":player_stats["sp"]}
     enemy_hp_sp = {"hp":enemy_stats["hp"], "sp":enemy_stats["sp"]}
     print("Player encountered an infected brush!")
-    # Fight menu which shows the user the options
-    
-    battle_ended = battle_over(player_hp_sp, enemy_hp_sp)
-            
-    if battle_ended == False:
-        finished_battle = False
-        
-    elif battle_ended == True:
-        if player_hp_sp["hp"] <= 0:
-            print("You have been defeated")
-        if enemy_hp_sp["hp"] <= 0:
-            print("You have won the battle!")
-        finished_battle = True
-        return finished_battle, player_hp_sp, enemy_hp_sp
-    
+    # Checks if the battle is over
     while finished_battle == False:
-        print("""What will you do?
-    [F] for Fight
-    [C] for Characters
-    [B] for Bag
-    [R] for Run""")
-        # Input for decisions on what to do
-        print(stats_bar)
-        print("Player: LEVEL: {}, HP: {}, SP:{}".format(player_stats["level"], player_hp_sp["hp"], player_hp_sp["sp"]))
-        print("Enemy: LEVEL: {}, HP: {}, SP:{}".format(enemy_stats["level"], enemy_hp_sp["hp"], enemy_hp_sp["sp"]))
-        print(stats_bar_2)
-        option = input("Please choose your option: ").upper()
-        if option == "F":
-            finished_battle, player_hp_sp, enemy_hp_sp = fight_command(finished_battle, player_stats, enemy_stats, player_moves, enemy_moves, moves, moves_desc, player_hp_sp, enemy_hp_sp)
-        elif option == "C":
-            finished_battle = characters_command(finished_battle, characters, player_stats, char_2_stats, char_3_stats, player_moves, moves)
-        elif option == "B":
-            bag_command()
-        elif option == "R":
-            run_command()
-        else:
-            print("Please only input one of the 4 options")
-
+        battle_ended = battle_over(player_hp_sp, enemy_hp_sp)
+                
+        if battle_ended == False:
+            finished_battle = False
+             # Fight menu which shows the user the options
+            print("""What will you do?
+        [F] for Fight
+        [C] for Characters
+        [B] for Bag
+        [R] for Run""")
+            # Input for decisions on what to do
+            print(stats_bar)
+            print("Player: LEVEL: {}, HP: {}, SP:{}".format(player_stats["level"], player_hp_sp["hp"], player_hp_sp["sp"]))
+            print("Enemy: LEVEL: {}, HP: {}, SP:{}".format(enemy_stats["level"], enemy_hp_sp["hp"], enemy_hp_sp["sp"]))
+            print(stats_bar_2)
+            option = input("Please choose your option: ").upper()
+            time.sleep(0.7)
+            if option == "F":
+                finished_battle, player_hp_sp, enemy_hp_sp = fight_command(finished_battle, player_stats, enemy_stats, player_moves, enemy_moves, moves, moves_desc, player_hp_sp, enemy_hp_sp)
+            elif option == "C":
+                finished_battle = characters_command(finished_battle, characters, player_stats, char_2_stats, char_3_stats, player_moves, moves)
+            elif option == "B":
+                bag_command()
+            elif option == "R":
+                run_command()
+            else:
+                print("Please only input one of the 4 options")
+   
+        elif battle_ended == True:
+            if player_hp_sp["hp"] <= 0:
+                print("You have been defeated")
+            if enemy_hp_sp["hp"] <= 0:
+                print("You have won the battle!")
+            finished_battle = True
+            return finished_battle, player_hp_sp, enemy_hp_sp
 
 def fight_command(finished_battle, player_stats, enemy_stats, player_moves, enemy_moves, moves, moves_desc, player_hp_sp, enemy_hp_sp):
     taken_turn = False
@@ -102,10 +101,12 @@ def fight_command(finished_battle, player_stats, enemy_stats, player_moves, enem
             try:
                 move_decision = int(input("Which move would you like to use? (5 for Info & 6 for Back)(1/2/3/4/5/6) "))
                 if move_decision >= 1 and move_decision <= 4:
+                    time.sleep(0.7)
                     move = player_moves[move_decision]
                     if moves[move][2] == "Phys":
-                        taken_turn = True
                         if player_hp_sp["hp"] > moves[move][3]:
+                            taken_turn = True
+                            print("\n===---------- PLAYER MOVE ----------===")
                             print("Player used {}".format(move))
                             enemy_hp_sp["hp"] -= moves[move][1]
                             print("The enemy Brush lost {} HP".format(moves[move][1]))
@@ -115,8 +116,9 @@ def fight_command(finished_battle, player_stats, enemy_stats, player_moves, enem
                             taken_turn = False
                             
                     if moves[move][2] == "Spec":
-                        taken_turn = True
                         if player_hp_sp["sp"] >= moves[move][3]:
+                            taken_turn = True
+                            print("\n===---------- PLAYER MOVE ----------===")
                             print("Player used {}".format(move))
                             enemy_hp_sp["hp"] -= moves[move][1]
                             print("The enemy Brush lost {} HP".format(moves[move][1]))
@@ -126,8 +128,10 @@ def fight_command(finished_battle, player_stats, enemy_stats, player_moves, enem
                             taken_turn = False
                             
                     if moves[move][2] == "Heal":
-                        taken_turn = True
                         if player_hp_sp["sp"] >= moves[move][3]:
+                            taken_turn = True
+                            print("\n===---------- PLAYER MOVE ----------===")
+                            print("Player used {}".format(move))
                             player_hp_sp["hp"] += moves[move][1]
                             print("You regained {} HP!".format(moves[move][1]))
                             player_hp_sp["sp"] -= moves[move][3]
@@ -138,8 +142,9 @@ def fight_command(finished_battle, player_stats, enemy_stats, player_moves, enem
                             taken_turn = False
 
                     if moves[move][2] == "Status":
-                        taken_turn = True
                         if player_hp_sp["sp"] >= moves[move][3]:
+                            taken_turn = True
+                            print("\n===---------- PLAYER MOVE ----------===")
                             print("Player used {}".format(move))
                             enemy_hp_sp["status"] == moves[move][1]
                             print("The enemy Brush was inflicted with {}".format(moves[move][1]))
@@ -190,21 +195,23 @@ Cost : {}{}""".format(move, moves_desc[move], moves[move][1], moves[move][2], mo
             except:
                 print("Please only input a number from 1 - 6")
                 taken_turn = False
+
+            if taken_turn == True:
+                battle_ended = battle_over(player_hp_sp, enemy_hp_sp)
                 
-            battle_ended = battle_over(player_hp_sp, enemy_hp_sp)
-            
-            if battle_ended == False:
-                finished_battle = False
-                enemy_fight(finished_battle, player_stats, enemy_stats, player_moves, enemy_moves, moves, player_hp_sp, enemy_hp_sp)
-                return finished_battle, player_hp_sp, enemy_hp_sp
-            
-            elif battle_ended == True:
-                if player_hp_sp["hp"] <= 0:
-                    print("You have been defeated")
-                if enemy_hp_sp["hp"] <= 0:
-                    print("You have won the battle!")
-                finished_battle = True
-                return finished_battle, player_hp_sp, enemy_hp_sp
+                if battle_ended == False:
+                    finished_battle = False
+                    enemy_fight(finished_battle, player_stats, enemy_stats, player_moves, enemy_moves, moves, player_hp_sp, enemy_hp_sp)
+                    return finished_battle, player_hp_sp, enemy_hp_sp
+                
+                elif battle_ended == True:
+                    if player_hp_sp["hp"] <= 0:
+                        print("You have been defeated")
+                    if enemy_hp_sp["hp"] <= 0:
+                        print("You have won the battle!")
+                    finished_battle = True
+                    return finished_battle, player_hp_sp, enemy_hp_sp
+                
             
 def battle_over(player_hp_sp, enemy_hp_sp):
     battle_ended = False
@@ -217,6 +224,8 @@ def battle_over(player_hp_sp, enemy_hp_sp):
 def enemy_fight(finished_battle, player_stats, enemy_stats, player_moves, enemy_moves, moves, player_hp_sp, enemy_hp_sp):
     max_enemy_hp = enemy_stats["hp"]
     enemy_moved = False
+    time.sleep(0.7)
+    print("\n===---------- ENEMY MOVE ----------===")
     while enemy_moved == False:
         if enemy_stats["status"] != "Sleep":
             enemy_move = random.randint(1, 4)
@@ -226,8 +235,9 @@ def enemy_fight(finished_battle, player_stats, enemy_stats, player_moves, enemy_
                     enemy_moved = True
                     print("Enemy used {}".format(move))
                     player_hp_sp["hp"] -= moves[move][1]
-                    print("You lost {} HP".format(moves[move][1]))
+                    print("You lost {} HP\n".format(moves[move][1]))
                     enemy_hp_sp["hp"] -= moves[move][3]
+                    time.sleep(0.7)
                 else:
                     enemy_move = random.randint(1, 4)
                     enemy_moved = False
@@ -237,8 +247,9 @@ def enemy_fight(finished_battle, player_stats, enemy_stats, player_moves, enemy_
                     enemy_moved = True
                     print("Enemy used {}".format(move))
                     player_hp_sp["hp"] -= moves[move][1]
-                    print("You lost {} HP".format(moves[move][1]))
+                    print("You lost {} HP\n".format(moves[move][1]))
                     enemy_hp_sp["sp"] -= moves[move][3]
+                    time.sleep(0.7)
                 else:
                     enemy_move = random.randint(1, 4)
                     enemy_moved = False
@@ -248,10 +259,11 @@ def enemy_fight(finished_battle, player_stats, enemy_stats, player_moves, enemy_
                     enemy_moved = True
                     print("Enemy used {}".format(move))
                     enemy_hp_sp["hp"] += moves[move][1]
-                    print("The enemy Brush regained {} HP!".format(moves[move][1]))
+                    print("The enemy Brush regained {} HP!\n".format(moves[move][1]))
                     enemy_hp_sp["sp"] -= moves[move][3]
                     if enemy_hp_sp["hp"] > max_enemy_hp:
                         enemy_hp_sp["hp"] = max_enemy_hp
+                    time.sleep(0.7)
                 else:
                     enemy_move = random.randint(1, 4)
                     enemy_moved = False
