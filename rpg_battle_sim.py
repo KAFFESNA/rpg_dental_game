@@ -11,7 +11,7 @@ def main():
 
     # This is the list of moves available in the game and their stats
     moves = {
-        "Slap":("Rock", 15, "Phys", 6),
+        "Slap":("Rock", 15, "Phys", 7),
         "Whiten":("Normal", 30, "Heal", 10),
         "Paste Blast":("Paper", 35, "Spec", 5),
         "Floss Whip":("Scissors", 30, "Phys", 15),
@@ -62,14 +62,14 @@ def main():
     # ===----- PLAYER STATS -----===
     # These are used for finding different stats and checking moves and health, this area helps the game run properly
     player_stats = {"level":5 , "type":"rock", "hp":100, "sp":50, "atk":58, "def":44, "spd":61, "status":"none"}
-    player_moves = {1:"Slap", 2:"Whiten", 3:"Paste Blast", 4:"Replenish"}
-    player_items = {1:("Mini Mouthwash", 1), 2:("Med. Mouthwash", 1), 3:("Massive Mouthwash", 1), 4:("Ethereal Floss", 1), 5:("Spectral Floss", 1), 6:("Drain Plug", 1), 7:("Revive", 1)}
+    player_moves = {1:"Slap", 2:"Whiten", 3:"Paste Blast", 4:"Brush Bash"}
+    player_items = {1:("Mini Mouthwash", 0), 2:("Med. Mouthwash", 0), 3:("Massive Mouthwash", 0), 4:("Ethereal Floss", 0), 5:("Spectral Floss", 0), 6:("Drain Plug", 0), 7:("Revive", 0)}
     # ===----- PLAYER STATS -----===
 
 
     # ===----- ENEMY STATS -----===
     # These are used in the same sense as the player stats but are used for the enemy instead
-    enemy_stats = {"level":5, "type":"scissors", "hp":100, "sp":50, "atk":48, "def":64, "spd":31, "status":"none", "classifier":"Normal"}
+    enemy_stats = {"level":5, "type":"scissors", "hp":250, "sp":100, "atk":48, "def":64, "spd":31, "status":"none", "classifier":"Normal"}
     enemy_moves = {1:"Cavity Crush", 2:"Decaying Beam", 3:"Plaque", 4:"Bad Breath"}
     # ===----- ENEMY STATS -----===
 
@@ -112,12 +112,13 @@ def main():
 [R] for Run""")
             # Input for decisions on what to do
             option = input("Please choose your option: ").upper()
+            print("")
             if option == "F":
                 turn_number, finished_battle, player_hp_sp, enemy_hp_sp = fight_command(turn_number, finished_battle, player_stats, enemy_stats, player_moves, enemy_moves, moves, moves_desc, player_hp_sp, enemy_hp_sp, enemy_gold, enemy_exp, gold, exp, max_hp, max_sp, items, player_items)
             elif option == "B":
                 turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items = bag_command(turn_number, finished_battle, player_stats, enemy_stats, player_hp_sp, enemy_hp_sp, player_moves, enemy_moves, moves, items, items_desc, player_items, gold, enemy_gold, exp, enemy_exp)
             elif option == "R":
-                run_command()
+                turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items = run_command(turn_number, finished_battle, player_stats, enemy_stats, player_moves, enemy_moves, moves, player_hp_sp, enemy_hp_sp, player_items, items)
             else:
                 print("Please only input one of the 3 options")
    
@@ -268,28 +269,32 @@ Cost : {}{}""".format(move, moves_desc[move], moves[move][1], moves[move][2], mo
                     return turn_number, finished_battle, player_hp_sp, enemy_hp_sp
                 
                 elif battle_ended == True:
-                    if player_items[7][1] == 0:
-                        if player_hp_sp["hp"] <= 0:
-                            print("You have been defeated")
-                        if enemy_hp_sp["hp"] <= 0:
-                            print("You have won the battle!")
-                            print("Your brush has gained {} EXP and you obtained {} Gold!".format(enemy_exp, enemy_gold))
-                            gold += enemy_gold
-                            exp += enemy_exp
-                            if exp >= 20:
-                                player_stats["level"] = 6
-                                print("You have grown to Level {}!".format(player_stats["level"]))
-                        finished_battle = True
-                        return turn_number, finished_battle, player_hp_sp, enemy_hp_sp
                     
-                    elif player_items[7][1] > 0:
-                        revive_usage = player_items[7][0]
-                        print("Player used a {}".format(player_items[7][0]))
-                        player_hp_sp == 50
-                        print("Player recovered {} HP".format(revive_usage))
-                        change_number = player_items[7][1]
-                        change_number -= 1
-                        player_items[7] = player_items[7][0], change_number
+                    if player_hp_sp["hp"] <= 0:
+                        if player_items[7][1] == 0:
+                            print("You have been defeated")
+
+                        elif player_items[7][1] > 0:
+                            revive_usage = player_items[7][0]
+                            print("Player used a {}".format(player_items[7][0]))
+                            player_hp_sp == 50
+                            print("Player recovered {} HP".format(revive_usage))
+                            change_number = player_items[7][1]
+                            change_number -= 1
+                            player_items[7] = player_items[7][0], change_number
+                            
+                    if enemy_hp_sp["hp"] <= 0:
+                        print("You have won the battle!")
+                        print("Your brush has gained {} EXP and you obtained {} Gold!".format(enemy_exp, enemy_gold))
+                        gold += enemy_gold
+                        exp += enemy_exp
+                        if exp >= 20:
+                            player_stats["level"] = 6
+                            print("You have grown to Level {}!".format(player_stats["level"]))
+                    finished_battle = True
+                    return turn_number, finished_battle, player_hp_sp, enemy_hp_sp
+                    
+                    
                         
                 
             
@@ -308,48 +313,53 @@ def enemy_fight(finished_battle, player_stats, enemy_stats, player_moves, enemy_
     time.sleep(0.7)
     print(enemy_partition)
     while enemy_moved == False:
-        if enemy_stats["status"] != "Sleep":
-            enemy_move = random.randint(1, 4)
-            move = enemy_moves[enemy_move]
-            if moves[move][2] == "Phys":
-                if enemy_hp_sp["hp"] > moves[move][3]:
-                    enemy_moved = True
-                    print("Enemy used {}".format(move))
-                    player_hp_sp["hp"] -= moves[move][1]
-                    print("You lost {} HP".format(moves[move][1]))
-                    enemy_hp_sp["hp"] -= moves[move][3]
-                    time.sleep(0.7)
-                else:
-                    enemy_move = random.randint(1, 4)
-                    enemy_moved = False
-                    
-            if moves[move][2] == "Spec":
-                if enemy_hp_sp["sp"] >= moves[move][3]:
-                    enemy_moved = True
-                    print("Enemy used {}".format(move))
-                    player_hp_sp["hp"] -= moves[move][1]
-                    print("You lost {} HP".format(moves[move][1]))
-                    enemy_hp_sp["sp"] -= moves[move][3]
-                    time.sleep(0.7)
-                else:
-                    enemy_move = random.randint(1, 4)
-                    enemy_moved = False
-                    
-            if moves[move][2] == "Heal":
-                if enemy_hp_sp["sp"] >= moves[move][3]:
-                    enemy_moved = True
-                    print("Enemy used {}".format(move))
-                    enemy_hp_sp["hp"] += moves[move][1]
-                    print("The enemy Brush regained {} HP!".format(moves[move][1]))
-                    enemy_hp_sp["sp"] -= moves[move][3]
-                    if enemy_hp_sp["hp"] > max_enemy_hp:
-                        enemy_hp_sp["hp"] = max_enemy_hp
-                    time.sleep(0.7)
-                else:
-                    enemy_move = random.randint(1, 4)
-                    enemy_moved = False
+        if enemy_hp_sp["hp"] >= 8 or enemy_hp_sp["sp"] >= 4:
+            if enemy_stats["status"] != "Sleep":
+                enemy_move = random.randint(1, 4)
+                move = enemy_moves[enemy_move]
+                if moves[move][2] == "Phys":
+                    if enemy_hp_sp["hp"] > moves[move][3]:
+                        enemy_moved = True
+                        print("Enemy used {}".format(move))
+                        player_hp_sp["hp"] -= moves[move][1]
+                        print("You lost {} HP".format(moves[move][1]))
+                        enemy_hp_sp["hp"] -= moves[move][3]
+                        time.sleep(0.7)
+                    else:
+                        enemy_move = random.randint(1, 4)
+                        enemy_moved = False
+                        
+                if moves[move][2] == "Spec":
+                    if enemy_hp_sp["sp"] >= moves[move][3]:
+                        enemy_moved = True
+                        print("Enemy used {}".format(move))
+                        player_hp_sp["hp"] -= moves[move][1]
+                        print("You lost {} HP".format(moves[move][1]))
+                        enemy_hp_sp["sp"] -= moves[move][3]
+                        time.sleep(0.7)
+                    else:
+                        enemy_move = random.randint(1, 4)
+                        enemy_moved = False
+                        
+                if moves[move][2] == "Heal":
+                    if enemy_hp_sp["sp"] >= moves[move][3]:
+                        enemy_moved = True
+                        print("Enemy used {}".format(move))
+                        enemy_hp_sp["hp"] += moves[move][1]
+                        print("The enemy Brush regained {} HP!".format(moves[move][1]))
+                        enemy_hp_sp["sp"] -= moves[move][3]
+                        if enemy_hp_sp["hp"] > max_enemy_hp:
+                            enemy_hp_sp["hp"] = max_enemy_hp
+                        time.sleep(0.7)
+                    else:
+                        enemy_move = random.randint(1, 4)
+                        enemy_moved = False
+            else:
+                enemy_stats["status"] == "none"
         else:
-            enemy_stats["status"] == "none"
+            print("The Enemy can't move!")
+            enemy_moved = True
+    
 
 def bag_command(turn_number, finished_battle, player_stats, enemy_stats, player_hp_sp, enemy_hp_sp, player_moves, enemy_moves, moves, items, items_desc, player_items, gold, enemy_gold, exp, enemy_exp):
     bag_partition = "\n===---------- ITEM USAGE ----------===\n"
@@ -394,7 +404,7 @@ def bag_command(turn_number, finished_battle, player_stats, enemy_stats, player_
                         if enemy_stats["classifier"] == "Normal":
                             print("Player used a {}".format(item))
                             escape_chance = random.randint(1,100)
-                            if escape_chance < 90:
+                            if escape_chance < items[item][1]:
                                 print("Player escaped the battle!\n")
                             else:
                                 print("The {} didn't work!\n".format(item))
@@ -423,10 +433,11 @@ def bag_command(turn_number, finished_battle, player_stats, enemy_stats, player_
                             item = player_items[desc_decision][0]
                             print("---------- {} ----------".format(item))
                             print("""Item : {}
+Description : {}
 Amount Left : {}
 Type : {}
 Power / Chance : {}
-Thing it affects : {}""".format(item, player_items[desc_decision][1], items[item][0], items[item][1], items[item][2]))
+Thing it affects : {}""".format(item, items_desc[item], player_items[desc_decision][1], items[item][0], items[item][1], items[item][2]))
                             
                         elif desc_decision == 8:
                             return turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items
@@ -450,7 +461,7 @@ Thing it affects : {}""".format(item, player_items[desc_decision][1], items[item
         change_number = player_items[item_usage][1]
         change_number -= 1
         player_items[item_usage] = player_items[item_usage][0], change_number
-        if items[item][0] == "Escape":
+        if items[item][0] == "Escape" and escape_chance < items[item][1]:
             battle_ended = True
             
         if battle_ended == False:
@@ -471,11 +482,28 @@ Thing it affects : {}""".format(item, player_items[desc_decision][1], items[item
                     player_stats["level"] = 6
                     print("You have grown to Level {}!".format(player_stats["level"]))
                     
-            elif items[item][0] == "Escape":
+            elif items[item][0] == "Escape" and escape_chance < 90:
                 print("Your brush has gained 0 EXP and you obtained 0 Gold")
                 
                 
         finished_battle = True
         return turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items
+
+def run_command(turn_number, finished_battle, player_stats, enemy_stats, player_moves, enemy_moves, moves, player_hp_sp, enemy_hp_sp, player_items, items):
+    run_partition = "\n===---------- RUNNING ----------===\n"
+    run_chance = random.randint(1,100)
+    print(run_partition)
+    if run_chance <= 50:
+        print("You Escaped the Battle!")
+        print("Your brush has gained 0 EXP and you obtained 0 Gold!")
+        finished_battle = True
+        return turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items
         
+    else:
+        print("Couldn't Escape!\n")
+        finished_battle = False
+        enemy_fight(finished_battle, player_stats, enemy_stats, player_moves, enemy_moves, moves, player_hp_sp, enemy_hp_sp)
+        turn_number += 1
+        return turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items
+    
 main()
