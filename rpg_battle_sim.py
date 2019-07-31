@@ -113,7 +113,7 @@ def main():
             # Input for decisions on what to do
             option = input("Please choose your option: ").upper()
             if option == "F":
-                turn_number, finished_battle, player_hp_sp, enemy_hp_sp = fight_command(turn_number, finished_battle, player_stats, enemy_stats, player_moves, enemy_moves, moves, moves_desc, player_hp_sp, enemy_hp_sp, enemy_gold, enemy_exp, gold, exp, max_hp, max_sp)
+                turn_number, finished_battle, player_hp_sp, enemy_hp_sp = fight_command(turn_number, finished_battle, player_stats, enemy_stats, player_moves, enemy_moves, moves, moves_desc, player_hp_sp, enemy_hp_sp, enemy_gold, enemy_exp, gold, exp, max_hp, max_sp, items, player_items)
             elif option == "B":
                 turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items = bag_command(turn_number, finished_battle, player_stats, enemy_stats, player_hp_sp, enemy_hp_sp, player_moves, enemy_moves, moves, items, items_desc, player_items, gold, enemy_gold, exp, enemy_exp)
             elif option == "R":
@@ -122,20 +122,30 @@ def main():
                 print("Please only input one of the 3 options")
    
         elif battle_ended == True:
-            if player_hp_sp["hp"] <= 0:
-                print("You have been defeated")
-            if enemy_hp_sp["hp"] <= 0:
-                print("You have won the battle!")
-                print("Your brush has gained {} EXP and you obtained {} Gold!".format(enemy_exp, enemy_gold))
-                gold += enemy_gold
-                exp += enemy_exp
-                if exp >= 20:
-                    player_stats["level"] = 6
-                    print("You have grown to Level {}!".format(player_stats["level"]))
-            finished_battle = True
-            return finished_battle, player_hp_sp, enemy_hp_sp
+            if player_items[7][1] == 0:
+                if player_hp_sp["hp"] <= 0:
+                    print("You have been defeated")
+                if enemy_hp_sp["hp"] <= 0:
+                    print("You have won the battle!")
+                    print("Your brush has gained {} EXP and you obtained {} Gold!".format(enemy_exp, enemy_gold))
+                    gold += enemy_gold
+                    exp += enemy_exp
+                    if exp >= 20:
+                        player_stats["level"] = 6
+                        print("You have grown to Level {}!".format(player_stats["level"]))
+                finished_battle = True
+                return finished_battle, player_hp_sp, enemy_hp_sp
+            
+            elif player_items[7][1] > 0:
+                revive_usage = player_items[7][0]
+                print("\nPlayer used a {}".format(player_items[7][0]))
+                player_hp_sp["hp"] = items[revive_usage][1]
+                print("Player recovered {} HP".format(items[revive_usage][1]))
+                change_number = player_items[7][1]
+                change_number -= 1
+                player_items[7] = player_items[7][0], change_number
 
-def fight_command(turn_number, finished_battle, player_stats, enemy_stats, player_moves, enemy_moves, moves, moves_desc, player_hp_sp, enemy_hp_sp, enemy_gold, enemy_exp, gold, exp, max_hp, max_sp):
+def fight_command(turn_number, finished_battle, player_stats, enemy_stats, player_moves, enemy_moves, moves, moves_desc, player_hp_sp, enemy_hp_sp, enemy_gold, enemy_exp, gold, exp, max_hp, max_sp, items, player_items):
     player_partition = "===---------- PLAYER MOVE ----------===\n"
     taken_turn = False
     max_player_hp = player_stats["hp"]
@@ -258,18 +268,29 @@ Cost : {}{}""".format(move, moves_desc[move], moves[move][1], moves[move][2], mo
                     return turn_number, finished_battle, player_hp_sp, enemy_hp_sp
                 
                 elif battle_ended == True:
-                    if player_hp_sp["hp"] <= 0:
-                        print("You have been defeated")
-                    if enemy_hp_sp["hp"] <= 0:
-                        print("You have won the battle!")
-                        print("Your brush has gained {} EXP and you obtained {} Gold!".format(enemy_exp, enemy_gold))
-                        gold += enemy_gold
-                        exp += enemy_exp
-                        if exp >= 20:
-                            player_stats["level"] = 6
-                            print("You have grown to Level {}!".format(player_stats["level"]))
-                    finished_battle = True
-                    return turn_number, finished_battle, player_hp_sp, enemy_hp_sp
+                    if player_items[7][1] == 0:
+                        if player_hp_sp["hp"] <= 0:
+                            print("You have been defeated")
+                        if enemy_hp_sp["hp"] <= 0:
+                            print("You have won the battle!")
+                            print("Your brush has gained {} EXP and you obtained {} Gold!".format(enemy_exp, enemy_gold))
+                            gold += enemy_gold
+                            exp += enemy_exp
+                            if exp >= 20:
+                                player_stats["level"] = 6
+                                print("You have grown to Level {}!".format(player_stats["level"]))
+                        finished_battle = True
+                        return turn_number, finished_battle, player_hp_sp, enemy_hp_sp
+                    
+                    elif player_items[7][1] > 0:
+                        revive_usage = player_items[7][0]
+                        print("Player used a {}".format(player_items[7][0]))
+                        player_hp_sp == 50
+                        print("Player recovered {} HP".format(revive_usage))
+                        change_number = player_items[7][1]
+                        change_number -= 1
+                        player_items[7] = player_items[7][0], change_number
+                        
                 
             
 def battle_over(player_hp_sp, enemy_hp_sp):
@@ -429,6 +450,9 @@ Thing it affects : {}""".format(item, player_items[desc_decision][1], items[item
         change_number = player_items[item_usage][1]
         change_number -= 1
         player_items[item_usage] = player_items[item_usage][0], change_number
+        if items[item][0] == "Escape":
+            battle_ended = True
+            
         if battle_ended == False:
             finished_battle = False
             enemy_fight(finished_battle, player_stats, enemy_stats, player_moves, enemy_moves, moves, player_hp_sp, enemy_hp_sp)
@@ -446,7 +470,12 @@ Thing it affects : {}""".format(item, player_items[desc_decision][1], items[item
                 if exp >= 20:
                     player_stats["level"] = 6
                     print("You have grown to Level {}!".format(player_stats["level"]))
-            finished_battle = True
-            return turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items
+                    
+            elif items[item][0] == "Escape":
+                print("Your brush has gained 0 EXP and you obtained 0 Gold")
+                
+                
+        finished_battle = True
+        return turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items
         
 main()
