@@ -63,7 +63,7 @@ def main():
     # These are used for finding different stats and checking moves and health, this area helps the game run properly
     player_stats = {"level":5 , "type":"rock", "hp":100, "sp":50, "atk":58, "def":44, "spd":61, "status":"none"}
     player_moves = {1:"Slap", 2:"Whiten", 3:"Paste Blast", 4:"Brush Bash"}
-    player_items = {1:("Mini Mouthwash", 1), 2:("Med. Mouthwash", 1), 3:("Massive Mouthwash", 2), 4:("Ethereal Floss", 1), 5:("Spectral Floss", 2), 6:("Drain Plug", 0), 7:("Revive", 1)}
+    player_items = {1:("Mini Mouthwash", 1), 2:("Med. Mouthwash", 1), 3:("Massive Mouthwash", 1), 4:("Ethereal Floss", 1), 5:("Spectral Floss", 1), 6:("Drain Plug", 1), 7:("Revive", 1)}
     # ===----- PLAYER STATS -----===
 
 
@@ -88,11 +88,37 @@ def main():
     
     # =====------------------ Stats and moves assigned to each character ------------------=====
     finished_battle = False
+    tutorial_over = False
+    difficulty_set = False
+    normal_multiplier = 2
+    hard_multiplier = 3
     turn_number = 1
     stats_bar = "--------------------\ Stats \--------------------"
     stats_bar_2 = "--------------------/ Stats /--------------------"
     player_hp_sp = {"hp":player_stats["hp"], "sp":player_stats["sp"]}
     enemy_hp_sp = {"hp":enemy_stats["hp"], "sp":enemy_stats["sp"]}
+    while tutorial_over == False:
+        tutorial_over = tutorial(tutorial_over)
+
+    while difficulty_set == False:
+        difficulty = difficulty_setting()
+        if difficulty == "Easy":
+            print("Difficulty set to: {}".format(difficulty))
+            difficulty_set = True
+            
+        elif difficulty == "Normal":
+            enemy_hp_sp["hp"] = enemy_hp_sp["hp"] * normal_multiplier
+            enemy_hp_sp["sp"] = enemy_hp_sp["sp"] * normal_multiplier
+            print("Difficulty set to: {}".format(difficulty))
+            difficulty_set = True
+            
+        elif difficulty == "Hard":
+            enemy_hp_sp["hp"] = enemy_hp_sp["hp"] * hard_multiplier
+            enemy_hp_sp["sp"] = enemy_hp_sp["sp"] * hard_multiplier
+            print("Difficulty set to: {}".format(difficulty))
+            difficulty_set = True
+    print("\n===---------- LET US START THE GAME ----------===\n")
+            
     print("Player encountered an infected brush!")
     # Checks if the battle is over
     while finished_battle == False:
@@ -121,7 +147,7 @@ def main():
             elif option == "R":
                 turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items = run_command(turn_number, finished_battle, player_stats, enemy_stats, player_moves, enemy_moves, moves, player_hp_sp, enemy_hp_sp, player_items, items)
             elif option == "H":
-                help_command()
+                turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items = help_command(turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items)
             else:
                 print("Please only input one of the 4 options")
        # Checks if the battle is over by checking the health of both parties or if the escape item used was successful
@@ -148,7 +174,6 @@ def main():
                 print("\nPlayer used a {}".format(player_items[7][0]))
                 player_hp_sp["hp"] = items[revive_usage][1]
                 print("Player recovered {} HP".format(items[revive_usage][1]))
-                # This changes the number of this item held to - 1 of what the user originally had
                 change_number = player_items[7][1]
                 change_number -= 1
                 player_items[7] = player_items[7][0], change_number
@@ -172,16 +197,23 @@ def fight_command(turn_number, finished_battle, player_stats, enemy_stats, playe
         # Checks if the move is Physical or Special to allocate cost type
         if moves[print_move][2] == "Phys":
             type_move = "HP"
-        if moves[print_move][2] == "Spec" or moves[print_move][2] == "Heal":
+            effect = "Damage"
+        if moves[print_move][2] == "Spec":
             type_move = "SP"
-        print("{}. [{}] [Cost : {}{}] - [Effect : {}]".format(move_counter + 1, player_moves[move_counter + 1], moves[print_move][3], type_move, moves[print_move][1]))
+            effect = "Damage"
+        if moves[print_move][2] == "Heal":
+            type_moves = "SP"
+            effect = "Healing"
+        print("{}. [{}] [Cost : {}{}] - [{} : {}]".format(move_counter + 1, player_moves[move_counter + 1], moves[print_move][3], type_move, effect, moves[print_move][1]))
+    print("""5. [INFO TAB]
+6. [BACK]""")
     # Checks if the battle has ended, if not, lets the user take their turn, otherwise checks who has lost their HP or if the user used an escape item
     while taken_turn == False:
         battle_ended = battle_over(player_hp_sp, enemy_hp_sp)
         if battle_ended == False:
             try:
                 # Input for a move to be used, 1-4 for moves and 5 for info, 6 to go back to the Options menu
-                move_decision = int(input("Which move would you like to use? (5 for Info & 6 for Back)(1/2/3/4/5/6) "))
+                move_decision = int(input("Which move would you like to use? (1/2/3/4/5/6) "))
                 # Checks what move was selected, if 1-4, checks moves and if 5, opens the info tab
                 if move_decision >= 1 and move_decision <= 4:
                     time.sleep(0.7)
@@ -249,7 +281,7 @@ def fight_command(turn_number, finished_battle, player_stats, enemy_stats, playe
                 # If 5 was input before, open the info tab, this is where players can check what moves do and more in detail about their stats
                 elif move_decision == FIGHT_TAB_INFO:
                     desc_decision = 0
-                    print("---------- INFO TAB ----------")
+                    print("===---------- INFO TAB ----------===")
                     
                     # Prints out the moves in order to display input options
                     for move_counter in range(len(player_moves)):
@@ -259,10 +291,11 @@ def fight_command(turn_number, finished_battle, player_stats, enemy_stats, playe
                         if moves[print_move][2] == "Spec" or moves[print_move][2] == "Heal":
                             type_move = "SP"
                         print("{}. [{}][{}{}]".format(move_counter + 1, player_moves[move_counter + 1], moves[print_move][3], type_move))
+                    print("5. [BACK]")
                     while desc_decision != 5:
                         try:
                             # Input for the Info Section, if 5 is input the user is taken back to the options menu
-                            desc_decision = int(input("Which move would you like to check? (5 for Back)(1/2/3/4/5) "))
+                            desc_decision = int(input("Which move would you like to check?)(1/2/3/4/5) "))
                             
                             # If the input was between 1-4, checks what move was checked and then displays information regarding the move checked
                             if desc_decision >= 1 and desc_decision <= 4:
@@ -383,7 +416,7 @@ def enemy_fight(finished_battle, player_stats, enemy_stats, player_moves, enemy_
                     else:
                         enemy_move = random.randint(1, 4)
                         enemy_moved = False
-                        
+                # Repeats process until suitable type of move is matched with the one chosen
                 if moves[move][2] == "Spec":
                     if enemy_hp_sp["sp"] >= moves[move][3]:
                         enemy_moved = True
@@ -419,22 +452,37 @@ def enemy_fight(finished_battle, player_stats, enemy_stats, player_moves, enemy_
 def bag_command(turn_number, finished_battle, player_stats, enemy_stats, player_hp_sp, enemy_hp_sp, player_moves, enemy_moves, moves, items, items_desc, player_items, gold, enemy_gold, exp, enemy_exp):
     """This is the Bag Command, this lets the user use items that they have found or have been given at the start of the game,
     these include HP and SP healing items, an escape move and a revive move, when the user uses an item, their turn is used up and the enemy is available to attack"""
+    # Sets max_hp and sp to the current stats found in the stats dictionary
     bag_partition = "\n===---------- ITEM USAGE ----------===\n"
     used_item = False
     print_no = 0
+    INFO_TAB_NO = 8
     max_hp = player_stats["hp"]
     max_sp = player_stats["sp"]
     for item_counter in range(len(player_items)):
+        item_type = player_items[item_counter + 1][0]
+        if items[item_type][0] == "Heal":
+            usage = items[item_type][1]
+            effect = items[item_type][2]
+        if items[item_type][0] == "Escape":
+            usage = items[item_type][0]
+            effect = "{}%".format(items[item_type][1])
+        if items[item_type][0] == "Revive":
+            usage = "Auto"
+            effect = "Use"
         item_amount = player_items[item_counter + 1][1]
         print_no += 1
-        print("{}. [{}][x{}]".format(print_no, player_items[item_counter + 1][0], player_items[item_counter + 1][1]))
-            
+        print("{}. [{}][x{}] - [{} {}]".format(print_no, player_items[item_counter + 1][0], player_items[item_counter + 1][1], usage, effect))
+    print("""8. [INFO TAB]
+9. [BACK]""")
+    # Until used item becomes true it will repeat the question
     while used_item == False:
         try:
-            item_usage = int(input("What item would you like to use? 1/2/3/4/5/6/7/8/9/ (8 for Info & 9 for Back) "))
+            item_usage = int(input("What item would you like to use? (1/2/3/4/5/6/7/8/9) "))
             if item_usage >= 1 and item_usage <= 7:
                 time.sleep(0.7)
                 item = player_items[item_usage][0]
+                # Checks if the player owns one of the items they want to use, then checks what type of item it is
                 if player_items[item_usage][1] != 0:
                     if items[item][0] == "Heal":
                         if items[item][2] == "HP":
@@ -446,7 +494,7 @@ def bag_command(turn_number, finished_battle, player_stats, enemy_stats, player_
                                 player_hp_sp["hp"] = max_hp
                             used_item = True
                             
-                            
+                        # Repeats process until suitable item type is matched with the item chosen 
                         elif items[item][2] == "SP":
                             print(bag_partition)
                             print("Player used a {}".format(item))
@@ -474,18 +522,19 @@ def bag_command(turn_number, finished_battle, player_stats, enemy_stats, player_
                 else:
                     print("You dont have any of this item.\n")
                     used_item = False
-
-            elif item_usage == 8:
+            # IF you select 8 instead, you go to the info tab which lets you see what items do, it doesnt take up a turn.
+            elif item_usage == INFO_TAB_NO:
                 info_print_no = 0
                 desc_decision = 0
-                print("---------- INFO TAB ----------")
+                print("===---------- INFO TAB ----------===")
                 for info_counter in range(len(player_items)):
                     info_amount = player_items[info_counter + 1][1]
                     info_print_no += 1
                     print("{}. [{}]".format(info_print_no, player_items[info_counter + 1][0]))
+                print("8. [BACK]")
                 while desc_decision != 8:
                     try:
-                        desc_decision = int(input("Which item would you like to check? (8 for Back)(1/2/3/4/5/6/7/8) "))
+                        desc_decision = int(input("Which item would you like to check? (1/2/3/4/5/6/7/8) "))
                         if desc_decision >= 1 and desc_decision <= 7:
                             item = player_items[desc_decision][0]
                             print("---------- {} ----------".format(item))
@@ -563,7 +612,140 @@ def run_command(turn_number, finished_battle, player_stats, enemy_stats, player_
         turn_number += 1
         return turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items
 
-# def help_command(): (continue later)
+def help_command(turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items):
+    helped = False
+    combat_help_no = 1
+    item_help_no = 2
+    help_partition = "\n===---------- HELP PAGE ----------===\n"
+    combat_help = {1:("HP","HP is short for Health Points, it decreases when attacked and increases when you heal"),
+                    2:("SP","SP is short for Spirit Points, its how you and your enemy cast spells and magic"),
+                    3:("Level","Your level dictates your stats, when you defeat enemies it may level up..."),
+                    4:("Moves","You and the enemy have 4 moves each, you can use any of them as long as you have enough HP or SP"),
+                    5:("Phys Moves","Physical Moves cost the user HP to cast and do damage to HP"),
+                    6:("Spec Moves","Special Moves cost the user SP to cast and do damage to HP"),
+                    7:("Heal Moves","These moves heal the user at the cost of SP"),
+                    8:("Status Moves","These moves append a status to the opponent, which have a variety of effects"),
+                    9:("Win Conditions","You either win or lose when HP drops to zero, or you escape the battle")}
     
+    item_help = {1:("Mouthwashes","These restore HP based on how big they are"),
+                 2:("Floss","These restore SP based on how they have been created, Ethereal is not as strong as Spectral"),
+                 3:("Escape Items","These items let you escape battle, these normally have a higher chance of working than simply running"),
+                 4:("Revive","Will automatically revive the holder if they reach zero HP")}
+     
+    while helped == False:
+        print(help_partition)
+        help_wait = 2
+        print("""1. [Combat]
+2. [Items]
+3. [BACK]
+""")
+        help_decision = int(input("What would you like help with? (1/2/3) "))
+        if help_decision == combat_help_no:
+            for help_counter in range(len(combat_help)):
+                print("{}. [{}]".format(help_counter + 1, combat_help[help_counter + 1][0]))
+            print("10. [BACK]")
+            combat_decision = int(input("What would you like to check? (1/2/3/4/5/6/7/8/9/10) "))
+            if combat_decision >= 1 and combat_decision <= 9:
+                print("=-----{}-----=\n {}".format(combat_help[combat_decision][0], combat_help[combat_decision][1]))
+                time.sleep(help_wait)
+            elif combat_decision == 10:
+                helped = False
+        elif help_decision == item_help_no:
+            for help_counter in range(len(item_help)):
+                print("{}. [{}]".format(help_counter + 1, item_help[help_counter + 1][0]))
+            print("5. [BACK]")
+            item_decision = int(input("What would you like to check? (1/2/3/4/5) "))
+            if item_decision >= 1 and item_decision <= 4:
+                print("=-----{}-----=\n {}".format(item_help[item_decision][0], item_help[item_decision][1]))
+                time.sleep(help_wait)
+            elif item_decision == 5:
+                helped = False
+        elif help_decision == 3:
+            return turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items
+
+     
+def tutorial(tutorial_over):
+    chosen = False
+    tutorial_wait = 2
+    while chosen == False:
+        tutorial = input("Would you like to see the tutorial for this game? (Y/N) ").upper()
+        if tutorial == "Y":
+            print("Welcome to this game, there are many mechanics to get acquainted to...")
+            time.sleep(tutorial_wait)
+            print("""\n===----- EXAMPLE -----===
+[F] for Fight
+[B] for Bag
+[R] for Run
+[H] for Help
+===----- EXAMPLE -----===\n""")
+            time.sleep(tutorial_wait)
+            print("In a battle, you have 4 Options; Fight, Bag, Run and Help")
+            time.sleep(tutorial_wait)
+            print("\n===---------- FIGHT ----------===")
+            time.sleep(tutorial_wait)
+            print("[Fight] lets you use a move that your trusty brush has learned")
+            time.sleep(tutorial_wait)
+            print("""\n===----- EXAMPLE -----===
+1. [Slap] [Cost : 7HP] - [Effect : 15]
+===----- EXAMPLE -----===\n""")
+            time.sleep(tutorial_wait)
+            print("This will display for all 4 moves that you have, you will also have the option to check all of them")
+            time.sleep(tutorial_wait)
+            print("Costs can be both HP and SP, SP acts like magic points in which you can cast Special moves or Healing with SP")
+            time.sleep(tutorial_wait)
+            print("And do Physical damage at the cost of HP")
+            time.sleep(tutorial_wait)
+            print("\n===---------- BAG ----------===")
+            time.sleep(tutorial_wait)
+            print("[Bag] lets you use an item that you have in your inventory")
+            time.sleep(tutorial_wait)
+            print("""\n===----- EXAMPLE -----===
+1. [Mini Mouthwash][x1]
+===----- EXAMPLE -----===\n""")
+            time.sleep(tutorial_wait)
+            print("This will display all items in the game, and how many you have of them")
+            time.sleep(tutorial_wait)
+            print("For example, a Mini Mouthwash will heal you for 10HP, and use up the item")
+            time.sleep(tutorial_wait)
+            print("You can also check the info for all items whenever")
+            time.sleep(tutorial_wait)
+            print("\n===---------- RUN ----------===")
+            time.sleep(tutorial_wait)
+            print("[Run] gives you a 50% chance to escape the battle")
+            time.sleep(tutorial_wait)
+            print("However, if it doesn't work, it uses up your turn.")
+            time.sleep(tutorial_wait)
+            print("\n===---------- HELP ----------===")
+            time.sleep(tutorial_wait)
+            print("[Help] lets you get any information about anything whenever you want")
+            time.sleep(tutorial_wait)
+            print("Thats all for the tutorial!\n")
+            time.sleep(tutorial_wait)
+            tutorial_over = True
+            chosen = True
+            return tutorial_over
+        
+        elif tutorial == "N":
+            tutorial_over = True
+            chosen = True
+            return tutorial_over
+        else:
+            print("Please only input Y or N")
+            chosen = False
+            
+def difficulty_setting():
+    print("\n===---------- DIFFICULTY ----------===\n")
+    chosen = False
+    while chosen == False:
+        print("What difficulty would you like?")
+        difficulty = input("Easy, Normal or Hard? ").title()
+        if difficulty != "Easy" and difficulty != "Normal" and difficulty != "Hard":
+            print("Please only input one of the 3 options")
+            chosen = False
+        else:
+            chosen = True
+            return difficulty
+            
+            
     
 main()
