@@ -5,6 +5,9 @@
 # RPG battle sim focused around dental hygiene.
 import random
 import time
+import sys
+try: color = sys.stdout.shell
+except AttributeError: raise RuntimeError("Use IDLE")
 # Main Function - Hub for battle
 def main():
      # =====------------------ Stats and moves assigned to each character ------------------=====
@@ -106,6 +109,7 @@ def main():
     difficulty_set = False
     NORMAL_MULTIPLIER = 2
     HARD_MULTIPLIER = 3
+    story_wait = 2
     player_hp_sp = {"hp":player_stats["hp"], "sp":player_stats["sp"]}
     enemy_hp_sp = {"hp":enemy_stats["hp"], "sp":enemy_stats["sp"]} 
     print("""Welcome to: The Quest for the GOLDEN BRUSH!""")
@@ -127,21 +131,113 @@ def main():
             enemy_hp_sp["sp"] = enemy_hp_sp["sp"] * HARD_MULTIPLIER
             print("Difficulty set to: {}".format(difficulty))
             difficulty_set = True
-    print("\n===---------- STORY ----------===\n")
-    print("""Your journey follows a boy who has awoken to his entire village that has
-been overrun by a strange curse from not brushing their teeth, however your character finds himself immune. It is up to you
-to find a cure. You recall hearing of a powerful relic hidden deep in the villages mines.
-You decide to venture down into the mines to save your town, on the quest for the Golden Brush""")
-    print("You make your way to the front of the mine and are greeted by an enemy, it lunges at you!")
+    enemy_hp_sp_recall = {"hp":enemy_hp_sp["hp"], "sp":enemy_hp_sp["sp"]}
+    # Story print, you can skip by pressing Ctrl + C
+    try:
+        print("\n===---------- STORY ----------===\n")
+        time.sleep(story_wait)
+        print("Press Ctrl + C whenever to skip")
+        time.sleep(story_wait)
+        print("Your journey follows a boy who has awoken to his entire village that has been cursed with bad dental hygiene")
+        time.sleep(story_wait)
+        print("however your character finds himself immune. It is up to you to find a cure")
+        time.sleep(story_wait)
+        print("You recall hearing of a powerful relic hidden deep in the villages mines.")
+        time.sleep(story_wait)
+        print("You decide to venture down into the mines")
+        time.sleep(story_wait)
+        print("With your trusty magic brush to save your town, on the quest for the Golden Brush.")
+        time.sleep(story_wait)
+        print("You make your way to the front of the mine and are greeted by an enemy, it lunges at you!")
+        time.sleep(story_wait)
+        
+    except KeyboardInterrupt:
+        pass
+    
     # Checks if the user skips the tutorial, if not then it plays the tutorial
     while tutorial_over == False:
         tutorial_over = tutorial(tutorial_over)
     
-    battle_start(moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp)
+    battle_start(moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall)
     print("Whew, that was close!")
+    print("You brush yourself off and head down.")
+    map_movement(moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall)
+def create_floor(create):
+    print("\n ===---------- MOVEMENT ----------=== \n")
+    for walls in range(5):
+        create.append(["O"] * 5)
 
+def display(floor_list):
+    for walls in floor_list:
+        print(" ".join(walls))
+        
+def map_movement(moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall):
+    moved = False
+    options = ["left", "right", "up", "down", "bag"]
+    floor_1 = []
+    floor_1_borders = [-1, 5]
+    chest_item = 7
+    chest_coords = [2, 2]
+    stair_coords = [4, 4]
+    create_floor(floor_1)
 
-def battle_start(moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp):
+    player_coords = [0, 0]
+    prev_player_coords = [0, 0]
+    floor_1[player_coords[0]][player_coords[1]] = "X"
+    floor_1[chest_coords[0]][chest_coords[1]] = "C"
+    floor_1[stair_coords[0]][stair_coords[1]] = "S"
+    display(floor_1)
+    while moved == False:
+        enemy_hp_sp = {"hp":enemy_hp_sp_recall["hp"], "sp":enemy_hp_sp_recall["sp"]}
+        print("\nType: Up, Down, Left, Right or Bag to perform actions")
+        movement = input("What would you like to do? ").lower()
+        if movement == "right":
+            player_coords[1] = player_coords[1] + 1
+            
+        elif movement == "left":
+            player_coords[1] = player_coords[1] - 1
+            
+        elif movement == "up":
+            player_coords[0] = player_coords[0] - 1
+            
+        elif movement == "down":
+            player_coords[0] = player_coords[0] + 1
+            
+        elif movement not in options:
+            print("Please enter a proper option")
+            
+        if player_coords[1] in floor_1_borders or player_coords[0] in floor_1_borders:
+            print("You try to go {} but you are met with a wall".format(movement))
+            player_coords[0] = prev_player_coords[0]
+            player_coords[1] = prev_player_coords[1]
+            floor_1[player_coords[0]][player_coords[1]] = "X"
+
+        else:
+            enemy_attack = random.randint(1, 100)
+            if enemy_attack < 10 or enemy_attack > 90:
+                battle_start(moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall)
+
+        if player_coords[0] == chest_coords[0] and player_coords[1] == chest_coords[1]:
+            change_number = player_items[chest_item][1]
+            change_number += 1
+            player_items[chest_item] = player_items[chest_item][0], change_number
+            print("Found {}, You now have x{}".format(player_items[chest_item][0], player_items[chest_item][1]))
+            chest_coords = [6, 6]
+            
+        if player_coords[0] == stair_coords[0] and player_coords[1] == stair_coords[1]:
+            print("You traversed down the stairs")
+            print("Srry ive only coded it to work with one room")
+            moved = True
+            
+        if moved == False:    
+            floor_1[prev_player_coords[0]][prev_player_coords[1]] = "O"
+            floor_1[player_coords[0]][player_coords[1]] = "X"
+            prev_player_coords[0] = player_coords[0]
+            prev_player_coords[1] = player_coords[1]
+            print("\n ===---------- MOVEMENT ----------=== \n")
+            display(floor_1)  
+    
+def battle_start(moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall):
     finished_battle = False
     turn_number = 1
     stats_bar = "--------------------\ Stats \--------------------"
@@ -195,7 +291,7 @@ def battle_start(moves, moves_desc, items, items_desc, player_stats, enemy_stats
                         player_stats["level"] = 6
                         print("You have grown to Level {}!".format(player_stats["level"]))
                 finished_battle = True
-                return finished_battle, player_hp_sp, enemy_hp_sp
+                return player_hp_sp, enemy_hp_sp, player_items, gold, exp
             # If the player reaches 0 HP, this will check if the user has a revive, which will restore 50HP and use the item
             elif player_items[7][1] > 0:
                 revive_usage = player_items[7][0]
@@ -379,7 +475,7 @@ Cost : {}{}""".format(move, moves_desc[move], moves[move][1], moves[move][2], mo
                         exp += enemy_exp
                         # If exp goes above 20, the player levels up to a level higher than what was previously their level
                         if exp >= 20:
-                            player_stats["level"] = 6
+                            player_stats["level"] += 1
                             print("You have grown to Level {}!".format(player_stats["level"]))
                     finished_battle = True
                     return turn_number, finished_battle, player_hp_sp, enemy_hp_sp
@@ -695,59 +791,65 @@ def tutorial(tutorial_over):
         # Plays tutorial, it shows all information that is essential to playing this game, it also puts stops inbetween every string so that the user can read them, when it is over it returns back to main
         tutorial = input("Would you like to see the tutorial for this game? (Y/N) ").upper()
         if tutorial == "Y":
-            print("Welcome to this game, there are many mechanics to get acquainted to...")
-            time.sleep(tutorial_wait)
-            print("""\n===----- EXAMPLE -----===
+            try:
+                tutorial_over = True
+                chosen = True
+                print("Press Ctrl + C to skip if you ever want to")
+                time.sleep(tutorial_wait)
+                print("Welcome to this game, there are many mechanics to get acquainted to...")
+                time.sleep(tutorial_wait)
+                print("""\n===----- EXAMPLE -----===
 [F] for Fight
 [B] for Bag
 [R] for Run
 [H] for Help
 ===----- EXAMPLE -----===\n""")
-            time.sleep(tutorial_wait)
-            print("In a battle, you have 4 Options; Fight, Bag, Run and Help")
-            time.sleep(tutorial_wait)
-            print("\n===---------- FIGHT ----------===")
-            time.sleep(tutorial_wait)
-            print("[Fight] lets you use a move that your trusty brush has learned")
-            time.sleep(tutorial_wait)
-            print("""\n===----- EXAMPLE -----===
-1. [Slap] [Cost : 7HP] - [Effect : 15]
-===----- EXAMPLE -----===\n""")
-            time.sleep(tutorial_wait)
-            print("This will display for all 4 moves that you have, you will also have the option to check all of them")
-            time.sleep(tutorial_wait)
-            print("Costs can be both HP and SP, SP acts like magic points in which you can cast Special moves or Healing with SP")
-            time.sleep(tutorial_wait)
-            print("And do Physical damage at the cost of HP")
-            time.sleep(tutorial_wait)
-            print("\n===---------- BAG ----------===")
-            time.sleep(tutorial_wait)
-            print("[Bag] lets you use an item that you have in your inventory")
-            time.sleep(tutorial_wait)
-            print("""\n===----- EXAMPLE -----===
-1. [Mini Mouthwash][x1]
-===----- EXAMPLE -----===\n""")
-            time.sleep(tutorial_wait)
-            print("This will display all items in the game, and how many you have of them")
-            time.sleep(tutorial_wait)
-            print("For example, a Mini Mouthwash will heal you for 10HP, and use up the item")
-            time.sleep(tutorial_wait)
-            print("You can also check the info for all items whenever")
-            time.sleep(tutorial_wait)
-            print("\n===---------- RUN ----------===")
-            time.sleep(tutorial_wait)
-            print("[Run] gives you a 50% chance to escape the battle")
-            time.sleep(tutorial_wait)
-            print("However, if it doesn't work, it uses up your turn.")
-            time.sleep(tutorial_wait)
-            print("\n===---------- HELP ----------===")
-            time.sleep(tutorial_wait)
-            print("[Help] lets you get any information about anything whenever you want")
-            time.sleep(tutorial_wait)
-            print("Thats all for the tutorial!\n")
-            time.sleep(tutorial_wait)
-            tutorial_over = True
-            chosen = True
+                time.sleep(tutorial_wait)
+                print("In a battle, you have 4 Options; Fight, Bag, Run and Help")
+                time.sleep(tutorial_wait)
+                print("\n===---------- FIGHT ----------===")
+                time.sleep(tutorial_wait)
+                print("[Fight] lets you use a move that your trusty brush has learned")
+                time.sleep(tutorial_wait)
+                print("""\n===----- EXAMPLE -----===
+    1. [Slap] [Cost : 7HP] - [Effect : 15]
+    ===----- EXAMPLE -----===\n""")
+                time.sleep(tutorial_wait)
+                print("This will display for all 4 moves that you have, you will also have the option to check all of them")
+                time.sleep(tutorial_wait)
+                print("Costs can be both HP and SP, SP acts like magic points in which you can cast Special moves or Healing with SP")
+                time.sleep(tutorial_wait)
+                print("And do Physical damage at the cost of HP")
+                time.sleep(tutorial_wait)
+                print("\n===---------- BAG ----------===")
+                time.sleep(tutorial_wait)
+                print("[Bag] lets you use an item that you have in your inventory")
+                time.sleep(tutorial_wait)
+                print("""\n===----- EXAMPLE -----===
+    1. [Mini Mouthwash][x1]
+    ===----- EXAMPLE -----===\n""")
+                time.sleep(tutorial_wait)
+                print("This will display all items in the game, and how many you have of them")
+                time.sleep(tutorial_wait)
+                print("For example, a Mini Mouthwash will heal you for 10HP, and use up the item")
+                time.sleep(tutorial_wait)
+                print("You can also check the info for all items whenever")
+                time.sleep(tutorial_wait)
+                print("\n===---------- RUN ----------===")
+                time.sleep(tutorial_wait)
+                print("[Run] gives you a 50% chance to escape the battle")
+                time.sleep(tutorial_wait)
+                print("However, if it doesn't work, it uses up your turn.")
+                time.sleep(tutorial_wait)
+                print("\n===---------- HELP ----------===")
+                time.sleep(tutorial_wait)
+                print("[Help] lets you get any information about anything whenever you want")
+                time.sleep(tutorial_wait)
+                print("Thats all for the tutorial!\n")
+                time.sleep(tutorial_wait)
+            except KeyboardInterrupt:
+                tutorial_wait = 0
+                pass
             return tutorial_over
         # if tutorial is skipped, instantly returns back to main
         elif tutorial == "N":
