@@ -161,33 +161,40 @@ def main():
     battle_start(moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall)
     print("Whew, that was close!")
     print("You brush yourself off and head down.")
-    map_movement(moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall)
-def create_floor(create):
     print("\n ===---------- MOVEMENT ----------=== \n")
-    for walls in range(5):
-        create.append(["O"] * 5)
-
-def display(floor_list):
-    for walls in floor_list:
-        print(" ".join(walls))
+    time.sleep(story_wait)
+    print("You are X, Chests are C and the Stairs are S\n")
+    time.sleep(story_wait)
+    floor_number = 1
+    map_movement(floor_number, moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall)
         
-def map_movement(moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall):
+def map_movement(floor_number, moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall):
+    finished_game = False
     moved = False
     options = ["left", "right", "up", "down", "bag"]
-    floor_1 = []
+    floor = []
+    floor_borders = []
     floor_1_borders = [-1, 5]
-    chest_item = 7
-    chest_coords = [2, 2]
-    stair_coords = [4, 4]
-    create_floor(floor_1)
-
+    floor_2_borders = [-1, 6]
+    floor_3_borders = [-1, 7]
+    floor_number = 1
+    chest_item = 0
+    chest_coords = [0, 0]
+    stair_coords = [0, 0]
     player_coords = [0, 0]
     prev_player_coords = [0, 0]
-    floor_1[player_coords[0]][player_coords[1]] = "X"
-    floor_1[chest_coords[0]][chest_coords[1]] = "C"
-    floor_1[stair_coords[0]][stair_coords[1]] = "S"
-    display(floor_1)
-    while moved == False:
+    
+    chest_item, chest_coords, stair_coords, player_coords, prev_player_coords = assign_items(floor_number, chest_coords, stair_coords, player_coords, prev_player_coords)
+    create_floor(floor, floor_number, floor_borders, floor_1_borders, floor_2_borders, floor_3_borders)
+    
+    floor[player_coords[0]][player_coords[1]] = "X"
+    floor[chest_coords[0]][chest_coords[1]] = "C"
+    floor[stair_coords[0]][stair_coords[1]] = "S"
+    display(floor)
+    while finished_game == False:
+        if floor_number == 2 or floor_number == 3:
+            print("\n ===---------- MOVEMENT ----------=== \n")
+            display(floor)
         enemy_hp_sp = {"hp":enemy_hp_sp_recall["hp"], "sp":enemy_hp_sp_recall["sp"]}
         print("\nType: Up, Down, Left, Right or Bag to perform actions")
         movement = input("What would you like to do? ").lower()
@@ -205,12 +212,12 @@ def map_movement(moves, moves_desc, items, items_desc, player_stats, enemy_stats
             
         elif movement not in options:
             print("Please enter a proper option")
-            
-        if player_coords[1] in floor_1_borders or player_coords[0] in floor_1_borders:
+        
+        if player_coords[1] in floor_borders or player_coords[0] in floor_borders:
             print("You try to go {} but you are met with a wall".format(movement))
             player_coords[0] = prev_player_coords[0]
             player_coords[1] = prev_player_coords[1]
-            floor_1[player_coords[0]][player_coords[1]] = "X"
+            floor[player_coords[0]][player_coords[1]] = "X"
 
         else:
             enemy_attack = random.randint(1, 100)
@@ -222,21 +229,70 @@ def map_movement(moves, moves_desc, items, items_desc, player_stats, enemy_stats
             change_number += 1
             player_items[chest_item] = player_items[chest_item][0], change_number
             print("Found {}, You now have x{}".format(player_items[chest_item][0], player_items[chest_item][1]))
-            chest_coords = [6, 6]
+            chest_coords = [10, 10]
             
         if player_coords[0] == stair_coords[0] and player_coords[1] == stair_coords[1]:
             print("You traversed down the stairs")
-            print("Srry ive only coded it to work with one room")
-            moved = True
+            floor_number += 1
+            floor, floor_borders = create_floor(floor, floor_number, floor_borders, floor_1_borders, floor_2_borders, floor_3_borders)
+            chest_item, chest_coords, stair_coords, player_coords, prev_player_coords = assign_items(floor_number, chest_coords, stair_coords, player_coords, prev_player_coords)
+            floor[player_coords[0]][player_coords[1]] = "X"
+            floor[chest_coords[0]][chest_coords[1]] = "C"
+            floor[stair_coords[0]][stair_coords[1]] = "S"
             
-        if moved == False:    
-            floor_1[prev_player_coords[0]][prev_player_coords[1]] = "O"
-            floor_1[player_coords[0]][player_coords[1]] = "X"
+        if finished_game == False:    
+            floor[prev_player_coords[0]][prev_player_coords[1]] = "O"
+            floor[player_coords[0]][player_coords[1]] = "X"
             prev_player_coords[0] = player_coords[0]
             prev_player_coords[1] = player_coords[1]
-            print("\n ===---------- MOVEMENT ----------=== \n")
-            display(floor_1)  
-    
+            if floor_number == 1:
+                print("\n ===---------- MOVEMENT ----------=== \n")
+                display(floor)
+
+def create_floor(create, floor_number, floor_borders, floor_1_borders, floor_2_borders, floor_3_borders):
+    if floor_number == 1:
+        floor_borders = floor_1_borders
+        spaces = 5
+    elif floor_number == 2:
+        floor_borders = floor_2_borders
+        create = []
+        spaces = 6
+    elif floor_number == 3:
+        floor_borders = floor_3_borders
+        create = []
+        spaces = 7
+    for walls in range(spaces):
+        create.append(["O"] * spaces)
+    return create, floor_borders
+
+def display(floor_list):
+    for walls in floor_list:
+        print(" ".join(walls))
+
+def assign_items(floor_number, chest_coords, stair_coords, player_coords, prev_player_coords):
+    if floor_number == 1:
+        chest_item = 7
+        chest_coords = [2, 2]
+        stair_coords = [4, 4]
+        player_coords = [0, 0]
+        prev_player_coords = [0, 0]
+        return chest_item, chest_coords, stair_coords, player_coords, prev_player_coords
+
+    if floor_number == 2:
+        chest_item = 3
+        chest_coords = [5, 1]
+        stair_coords = [5, 5]
+        player_coords = [0, 0]
+        prev_player_coords = [0, 0]
+        return chest_item, chest_coords, stair_coords, player_coords, prev_player_coords
+
+    if floor_number == 3:
+        chest_item = 6
+        chest_coords = [3, 3]
+        stair_coords = [6, 6]
+        prev_player_coords = [0, 0]
+        return chest_item, chest_coords, stair_coords, player_coords, prev_player_coords
+        
 def battle_start(moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall):
     finished_battle = False
     turn_number = 1
@@ -788,6 +844,7 @@ def tutorial(tutorial_over):
     chosen = False
     tutorial_wait = 2
     while chosen == False:
+        tutorial = None
         # Plays tutorial, it shows all information that is essential to playing this game, it also puts stops inbetween every string so that the user can read them, when it is over it returns back to main
         tutorial = input("Would you like to see the tutorial for this game? (Y/N) ").upper()
         if tutorial == "Y":
