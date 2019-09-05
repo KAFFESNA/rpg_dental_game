@@ -15,6 +15,7 @@ def main():
     # This is the list of moves available in the game and their stats
     moves = {
         "Slap":("Rock", 15, "Phys", 7),
+        "Super Slap":("Rock", 25, "Phys", 9),
         "Whiten":("Normal", 30, "Heal", 10),
         "Paste Blast":("Paper", 35, "Spec", 5),
         "Floss Whip":("Scissors", 30, "Phys", 15),
@@ -25,7 +26,11 @@ def main():
         "Cavity Crush":("Rock", 15, "Phys", 8),
         "Decaying Beam":("Paper", 25, "Spec", 10),
         "Plaque":("Scissors", 10, "Spec", 4),
-        "Bad Breath":("Paper", 30, "Phys", 20)}
+        "Bad Breath":("Paper", 30, "Phys", 20),
+        "Scourge's Wrath":("Rock", 40, "Spec", 15),
+        "Filling":("Scissors", 20 ,"Heal", 10),
+        "Plaque Punch":("Paper", 30, "Phys", 18),
+        "Neverending Decay":("Paper", 10, "Phys", 5)}
 
     # This is the list of moves descriptions that is used in the INFO TAB
     moves_desc = {
@@ -40,17 +45,21 @@ def main():
         "Cavity Crush":"The user attacks the enemy with a disgusting attack",
         "Decaying Beam":"The user attacks the enemy with dirty water in hopes of decaying them",
         "Plaque":"The user dirties the other, inflicting damage",
-        "Bad Breath":"The user throws their rancid breath at the enemy"}
+        "Bad Breath":"The user throws their rancid breath at the enemy",
+        "Scourge's Wrath":"The enemy attacks in a flurry",
+        "Filling":"The enemy heals itself by repairing the flesh",
+        "Plaque Punch":"The enemy attacks with a fist made of grime",
+        "Neverending Decay":"The Scourge's Signature move, its decaying body attacks!"}
 
     # This is the list of items available for finding in the game and their uses
     items = {
-        "Mini Mouthwash":("Heal", 10, "HP"),
-        "Med. Mouthwash":("Heal", 30, "HP"),
-        "Massive Mouthwash":("Heal", 50, "HP"),
+        "Mini Mouthwash":("Heal", 25, "HP"),
+        "Med. Mouthwash":("Heal", 50, "HP"),
+        "Massive Mouthwash":("Heal", 75, "HP"),
         "Ethereal Floss":("Heal", 10, "SP"),
         "Spectral Floss":("Heal", 25, "SP"),
         "Drain Plug":("Escape", 90, "Escape"),
-        "Revive":("Revive", 50, "HP")}
+        "Revive":("Revive", 75, "HP")}
 
     # This is the list of the items descriptions that is used in the INFO TAB
     items_desc = {
@@ -64,7 +73,7 @@ def main():
 
     # ===----- PLAYER STATS -----===
     # These are used for finding different stats and checking moves and health, this area helps the game run properly, these are called in the [F]ight, [B]ag, [R]un and Enemy Fight Functions
-    player_stats = {"level":5 , "type":"rock", "hp":100, "sp":50, "atk":58, "def":44, "spd":61, "status":"none"}
+    player_stats = {"level":5 , "type":"rock", "hp":100, "sp":50, "atk":58, "def":44, "spd":61, "status":"none", "exp":0}
     player_moves = {1:"Slap", 2:"Whiten", 3:"Paste Blast", 4:"Brush Bash"}
     player_items = {1:("Mini Mouthwash", 1), 2:("Med. Mouthwash", 1), 3:("Massive Mouthwash", 1), 4:("Ethereal Floss", 1), 5:("Spectral Floss", 1), 6:("Drain Plug", 1), 7:("Revive", 1)}
     # ===----- PLAYER STATS -----===
@@ -79,7 +88,7 @@ def main():
 
     # ===----- OTHER STATS -----===
     # The other stats area includes EXP and Gold, it also includes the EXP and Gold an enemy will drop when defeated
-    enemy_exp = 10
+    enemy_exp = 20
     enemy_gold = 50
 
     gold = 0
@@ -162,6 +171,7 @@ def main():
         tutorial_over = tutorial(tutorial_over)
     
     battle_start(moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall)
+    time.sleep(story_wait)
     print("Whew, that was close!")
     print("You brush yourself off and head down.")
     floor_number = 1
@@ -170,11 +180,17 @@ def main():
     print("You are X, Chests are C and the Stairs are S\n")
     time.sleep(story_wait)
     floor_number = map_movement(floor_number, moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall)
+    if enemy_stats["classifier"] == "Boss":
+        floor_number = 4
+        if enemy_hp_sp["hp"] <= 0:
+            print("\nYou Beat the Game!!")
+            return
     print("You Managed to make it to Floor {}".format(floor_number))
     return
 
 def map_movement(floor_number, moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall):
     finished_game = False
+    ending_wait = 2
     moved = False
     options = ["left", "right", "up", "down", "bag", "l", "r", "u", "d", "b"]
     floor = []
@@ -224,9 +240,10 @@ def map_movement(floor_number, moves, moves_desc, items, items_desc, player_stat
             player_coords[1] = prev_player_coords[1]
             floor[player_coords[0]][player_coords[1]] = "X"
 
-        else:
+        elif player_coords != chest_coords or player_coords != stair_coords:
             enemy_attack = random.randint(1, 100)
-            if enemy_attack < 10 or enemy_attack > 90:
+            if enemy_attack >= 30 and enemy_attack <= 40 or enemy_attack <= 70 and enemy_attack >= 80:
+                time.sleep(ending_wait)
                 battle_start(moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall)
                 if player_hp_sp["hp"] <= 0:
                     finished_game = True
@@ -242,12 +259,28 @@ def map_movement(floor_number, moves, moves_desc, items, items_desc, player_stat
         if player_coords[0] == stair_coords[0] and player_coords[1] == stair_coords[1]:
             print("\n ===----------NEXT LEVEL ----------=== \n")
             print("You traversed down the stairs")
-            floor_number += 1
-            floor, floor_borders = create_floor(floor, floor_number, floor_borders, floor_1_borders, floor_2_borders, floor_3_borders)
-            chest_item, chest_coords, stair_coords, player_coords, prev_player_coords = assign_items(floor_number, chest_coords, stair_coords, player_coords, prev_player_coords)
-            floor[player_coords[0]][player_coords[1]] = "X"
-            floor[chest_coords[0]][chest_coords[1]] = "C"
-            floor[stair_coords[0]][stair_coords[1]] = "S"
+            if floor_number == 3:
+                print("You spot the relic sitting on a pedestal before your eyes")
+                time.sleep(ending_wait)
+                print("However, before you can reach it... A powerful enemy blocks the path!")
+                time.sleep(ending_wait)
+                enemy_stats = {"level":7, "type":"rock", "hp":250, "sp":100, "atk":48, "def":64, "spd":31, "status":"none", "classifier":"Boss"}
+                enemy_moves = {1:"Neverending Decay", 2:"Filling", 3:"Plaque Punch", 4:"Scourge's Wrath"}
+                enemy_hp_sp = {"hp":enemy_stats["hp"], "sp":enemy_stats["sp"]}
+                battle_start(moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall)
+                if enemy_hp_sp["hp"] <= 0:
+                    game_ending()
+                    return
+                elif player_hp_sp["hp"] <= 0:
+                    finished_game = True
+                
+            else:
+                floor_number += 1
+                floor, floor_borders = create_floor(floor, floor_number, floor_borders, floor_1_borders, floor_2_borders, floor_3_borders)
+                chest_item, chest_coords, stair_coords, player_coords, prev_player_coords = assign_items(floor_number, chest_coords, stair_coords, player_coords, prev_player_coords)
+                floor[player_coords[0]][player_coords[1]] = "X"
+                floor[chest_coords[0]][chest_coords[1]] = "C"
+                floor[stair_coords[0]][stair_coords[1]] = "S"
             
         if finished_game == False:    
             floor[prev_player_coords[0]][prev_player_coords[1]] = "O"
@@ -310,7 +343,11 @@ def battle_start(moves, moves_desc, items, items_desc, player_stats, enemy_stats
     stats_bar_2 = "--------------------/ Stats /--------------------"
     max_hp = player_stats["hp"]
     max_sp = player_stats["sp"]
-    print("Player encountered an infected brush!")
+    if enemy_stats["classifier"] == "Normal":
+        enemy_type = "an Infected Brush"
+    elif enemy_stats["classifier"] == "Boss":
+        enemy_type = "The Scourge of the Mouth"
+    print("Player encountered {}!".format(enemy_type))
     # Checks if the battle is over, if not then plays the next turn
     while finished_battle == False:
         battle_ended = battle_over(player_hp_sp, enemy_hp_sp)
@@ -353,11 +390,14 @@ def battle_start(moves, moves_desc, items, items_desc, player_stats, enemy_stats
                     gold += enemy_gold
                     exp += enemy_exp
                     if exp >= 20:
-                        # If players EXP goes above 20, they level up
-                        player_stats["level"] = 6
+                        player_stats["level"] = player_stats["level"] + 1
                         print("You have grown to Level {}!".format(player_stats["level"]))
+                        exp = 0
+                        if player_stats["level"] == 10:
+                            player_moves[1] = "Super Slap"
+                            print("Your Slap has upgraded to {}".format(player_moves[1]))
                 finished_battle = True
-                return player_hp_sp, enemy_hp_sp, player_items, gold, exp
+                return player_hp_sp, enemy_hp_sp, player_items
             # If the player reaches 0 HP, this will check if the user has a revive, which will restore 50HP and use the item
             elif player_items[7][1] > 0:
                 revive_usage = player_items[7][0]
@@ -381,6 +421,12 @@ def fight_command(turn_number, finished_battle, player_stats, enemy_stats, playe
     FIGHT_TAB_INFO = 5
     FIGHT_TAB_BACK = 6
     NO_HEALTH = 0
+    if enemy_stats["classifier"] == "Normal":
+        enemy_type = "Brush"
+    elif enemy_stats["classifier"] == "Boss":
+        enemy_type = "Scourge of the Mouth"
+        enemy_exp = 200
+        enemy_gold = 1000
     # Prints out all of the moves in order of the player_moves list and prints out their cost alongside 
     for move_counter in range(len(player_moves)):
         print_move = player_moves[move_counter + 1]
@@ -414,7 +460,7 @@ def fight_command(turn_number, finished_battle, player_stats, enemy_stats, playe
                             print(player_partition)
                             print("Player used {}".format(move))
                             enemy_hp_sp["hp"] -= moves[move][1]
-                            print("The enemy Brush lost {} HP\n".format(moves[move][1]))
+                            print("The enemy {} lost {} HP\n".format(enemy_type, moves[move][1]))
                             player_hp_sp["hp"] -= moves[move][3]
                         else:
                             print("You don't have enough HP to perform this action")
@@ -426,7 +472,7 @@ def fight_command(turn_number, finished_battle, player_stats, enemy_stats, playe
                             print(player_partition)
                             print("Player used {}".format(move))
                             enemy_hp_sp["hp"] -= moves[move][1]
-                            print("The enemy Brush lost {} HP\n".format(moves[move][1]))
+                            print("The enemy {} lost {} HP\n".format(enemy_type, moves[move][1]))
                             player_hp_sp["sp"] -= moves[move][3]
                         else:
                             print("You don't have enough SP to perform this action")
@@ -452,7 +498,7 @@ def fight_command(turn_number, finished_battle, player_stats, enemy_stats, playe
                             print(player_partition)
                             print("Player used {}".format(move))
                             enemy_hp_sp["status"] == moves[move][1]
-                            print("The enemy Brush was inflicted with {}\n".format(moves[move][1]))
+                            print("The enemy {} was inflicted with {}\n".format(enemy_type, moves[move][1]))
                             player_hp_sp["sp"] -= moves[move][3]
                         else:
                             print("You don't have enough SP to perform this action")
@@ -541,8 +587,12 @@ Cost : {}{}""".format(move, moves_desc[move], moves[move][1], moves[move][2], mo
                         exp += enemy_exp
                         # If exp goes above 20, the player levels up to a level higher than what was previously their level
                         if exp >= 20:
-                            player_stats["level"] += 1
+                            player_stats["level"] = player_stats["level"] + 1
                             print("You have grown to Level {}!".format(player_stats["level"]))
+                            exp = 0
+                            if player_stats["level"] == 10:
+                                player_moves[1] = "Super Slap"
+                                print("Your Slap has upgraded to {}".format(player_moves[1]))
                     finished_battle = True
                     return turn_number, finished_battle, player_hp_sp, enemy_hp_sp
 
@@ -566,6 +616,10 @@ def enemy_fight(finished_battle, player_stats, enemy_stats, player_moves, enemy_
     enemy_partition = "===---------- ENEMY MOVE ----------===\n"
     max_enemy_hp = enemy_stats["hp"]
     enemy_moved = False
+    if enemy_stats["classifier"] == "Normal":
+        enemy_type = "Brush"
+    elif enemy_stats["classifier"] == "Boss":
+        enemy_type = "Scourge of the Mouth"
     time.sleep(0.7)
     print(enemy_partition)
     # Loops the code until a suitable move is found, it randomises until they use a move, checks hp and sp currently to avoid a softlock, and also checks status
@@ -578,7 +632,7 @@ def enemy_fight(finished_battle, player_stats, enemy_stats, player_moves, enemy_
                 if moves[move][2] == "Phys":
                     if enemy_hp_sp["hp"] > moves[move][3]:
                         enemy_moved = True
-                        print("Enemy used {}".format(move))
+                        print("Enemy {} used {}".format(enemy_type, move))
                         player_hp_sp["hp"] -= moves[move][1]
                         print("You lost {} HP".format(moves[move][1]))
                         enemy_hp_sp["hp"] -= moves[move][3]
@@ -589,7 +643,7 @@ def enemy_fight(finished_battle, player_stats, enemy_stats, player_moves, enemy_
                 if moves[move][2] == "Spec":
                     if enemy_hp_sp["sp"] >= moves[move][3]:
                         enemy_moved = True
-                        print("Enemy used {}".format(move))
+                        print("Enemy {} used {}".format(enemy_type, move))
                         player_hp_sp["hp"] -= moves[move][1]
                         print("You lost {} HP".format(moves[move][1]))
                         enemy_hp_sp["sp"] -= moves[move][3]
@@ -601,9 +655,9 @@ def enemy_fight(finished_battle, player_stats, enemy_stats, player_moves, enemy_
                 if moves[move][2] == "Heal":
                     if enemy_hp_sp["sp"] >= moves[move][3]:
                         enemy_moved = True
-                        print("Enemy used {}".format(move))
+                        print("Enemy {} used {}".format(enemy_type, move))
                         enemy_hp_sp["hp"] += moves[move][1]
-                        print("The enemy Brush regained {} HP!".format(moves[move][1]))
+                        print("The enemy {} regained {} HP!".format(enemy_type, moves[move][1]))
                         enemy_hp_sp["sp"] -= moves[move][3]
                         if enemy_hp_sp["hp"] > max_enemy_hp:
                             enemy_hp_sp["hp"] = max_enemy_hp
@@ -685,6 +739,9 @@ def bag_command(turn_number, finished_battle, player_stats, enemy_stats, player_
                             else:
                                 print("The {} didn't work!\n".format(item))
                             used_item = True
+                        else:
+                            print("You couldn't escape!")
+                            used_item = True
                             
                     elif items[item][0] == "Revive":
                         print(bag_partition)
@@ -757,15 +814,19 @@ Thing it affects : {}""".format(item, items_desc[item], player_items[desc_decisi
                 gold += enemy_gold
                 exp += enemy_exp
                 if exp >= 20:
-                    player_stats["level"] = 6
+                    player_stats["level"] = player_stats["level"] + 1
                     print("You have grown to Level {}!".format(player_stats["level"]))
+                    exp = 0
+                    if player_stats["level"] == 10:
+                        player_moves[1] = "Super Slap"
+                        print("Your Slap has upgraded to {}".format(player_moves[1]))
                     
             elif items[item][0] == "Escape" and escape_chance < 90:
                 print("Your brush has gained 0 EXP and you obtained 0 Gold")
                 
                 
         finished_battle = True
-        return turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items
+        return turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items, exp, gold
 
 def run_command(turn_number, finished_battle, player_stats, enemy_stats, player_moves, enemy_moves, moves, player_hp_sp, enemy_hp_sp, player_items, items):
     """This is the run command,this determines whether the user can run from a battle or not,
@@ -943,6 +1004,22 @@ def difficulty_setting():
             chosen = False
         else:
             chosen = True
-            return difficulty 
-    
+            return difficulty
+def game_ending():
+    ending_wait = 1.6
+    print("You defeated the Scourge and retrieved the Relic.")
+    time.sleep(ending_wait)
+    print("You made your way to the surface and called for the Golden Brush to save your town")
+    time.sleep(ending_wait)
+    print("All the townsfolk came out of their houses and looked around confused.")
+    time.sleep(ending_wait)
+    print("You explained to them your mission and then they all realised the problem")
+    time.sleep(ending_wait)
+    print("They had forgotten to maintain their teeth and had been cursed")
+    time.sleep(ending_wait)
+    print("Once they realised what had happened they all swore to care for their teeth properly")
+    time.sleep(ending_wait)
+    print("You were labelled as a hero and the Golden Brush was put on display in the town centre")
+    time.sleep(ending_wait)
+    print("This was a reminder to all the townsfolk to keep their teeth clean!")
 main()
