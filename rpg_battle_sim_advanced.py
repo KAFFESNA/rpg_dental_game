@@ -116,19 +116,22 @@ def main():
     # Checks what difficulty the user sets the game to, uses the multiplier to set difficulty
     while difficulty_set == False:
         difficulty = difficulty_setting()
-        if difficulty == "Easy":
+        if difficulty == "Easy" or difficulty == "E":
+            difficulty = "EASY"
             print("Difficulty set to: {}".format(difficulty))
             difficulty_set = True
             
-        elif difficulty == "Normal":
+        elif difficulty == "Normal" or difficulty == "N":
             enemy_hp_sp["hp"] = enemy_hp_sp["hp"] * NORMAL_MULTIPLIER
             enemy_hp_sp["sp"] = enemy_hp_sp["sp"] * NORMAL_MULTIPLIER
+            difficulty = "NORMAL"
             print("Difficulty set to: {}".format(difficulty))
             difficulty_set = True
             
-        elif difficulty == "Hard":
+        elif difficulty == "Hard" or difficulty == "H":
             enemy_hp_sp["hp"] = enemy_hp_sp["hp"] * HARD_MULTIPLIER
             enemy_hp_sp["sp"] = enemy_hp_sp["sp"] * HARD_MULTIPLIER
+            difficulty = "HARD"
             print("Difficulty set to: {}".format(difficulty))
             difficulty_set = True
     enemy_hp_sp_recall = {"hp":enemy_hp_sp["hp"], "sp":enemy_hp_sp["sp"]}
@@ -161,17 +164,19 @@ def main():
     battle_start(moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall)
     print("Whew, that was close!")
     print("You brush yourself off and head down.")
-    print("\n ===---------- MOVEMENT ----------=== \n")
+    floor_number = 1
+    print("\n ===---------- FLOOR {} ----------=== \n".format(floor_number))
     time.sleep(story_wait)
     print("You are X, Chests are C and the Stairs are S\n")
     time.sleep(story_wait)
-    floor_number = 1
-    map_movement(floor_number, moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall)
-        
+    floor_number = map_movement(floor_number, moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall)
+    print("You Managed to make it to Floor {}".format(floor_number))
+    return
+
 def map_movement(floor_number, moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall):
     finished_game = False
     moved = False
-    options = ["left", "right", "up", "down", "bag"]
+    options = ["left", "right", "up", "down", "bag", "l", "r", "u", "d", "b"]
     floor = []
     floor_borders = []
     floor_1_borders = [-1, 5]
@@ -185,7 +190,7 @@ def map_movement(floor_number, moves, moves_desc, items, items_desc, player_stat
     prev_player_coords = [0, 0]
     
     chest_item, chest_coords, stair_coords, player_coords, prev_player_coords = assign_items(floor_number, chest_coords, stair_coords, player_coords, prev_player_coords)
-    create_floor(floor, floor_number, floor_borders, floor_1_borders, floor_2_borders, floor_3_borders)
+    floor, floor_borders = create_floor(floor, floor_number, floor_borders, floor_1_borders, floor_2_borders, floor_3_borders)
     
     floor[player_coords[0]][player_coords[1]] = "X"
     floor[chest_coords[0]][chest_coords[1]] = "C"
@@ -193,28 +198,28 @@ def map_movement(floor_number, moves, moves_desc, items, items_desc, player_stat
     display(floor)
     while finished_game == False:
         if floor_number == 2 or floor_number == 3:
-            print("\n ===---------- MOVEMENT ----------=== \n")
+            print("\n ===---------- FLOOR {} ----------=== \n".format(floor_number))
             display(floor)
         enemy_hp_sp = {"hp":enemy_hp_sp_recall["hp"], "sp":enemy_hp_sp_recall["sp"]}
-        print("\nType: Up, Down, Left, Right or Bag to perform actions")
-        movement = input("What would you like to do? ").lower()
-        if movement == "right":
+        print("\nType: [U]p, [D]own, [L]eft, [R]ight or [B]ag to perform actions")
+        movement = input("What would you like to do? ").lower().strip()
+        if movement == "right" or movement == "r":
             player_coords[1] = player_coords[1] + 1
             
-        elif movement == "left":
+        elif movement == "left" or movement == "l":
             player_coords[1] = player_coords[1] - 1
             
-        elif movement == "up":
+        elif movement == "up" or movement == "u":
             player_coords[0] = player_coords[0] - 1
             
-        elif movement == "down":
+        elif movement == "down" or movement == "d":
             player_coords[0] = player_coords[0] + 1
             
         elif movement not in options:
             print("Please enter a proper option")
         
         if player_coords[1] in floor_borders or player_coords[0] in floor_borders:
-            print("You try to go {} but you are met with a wall".format(movement))
+            print("You try to go in that direction but you are met with a wall".format(movement))
             player_coords[0] = prev_player_coords[0]
             player_coords[1] = prev_player_coords[1]
             floor[player_coords[0]][player_coords[1]] = "X"
@@ -223,7 +228,10 @@ def map_movement(floor_number, moves, moves_desc, items, items_desc, player_stat
             enemy_attack = random.randint(1, 100)
             if enemy_attack < 10 or enemy_attack > 90:
                 battle_start(moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall)
-
+                if player_hp_sp["hp"] <= 0:
+                    finished_game = True
+                    return floor_number
+                
         if player_coords[0] == chest_coords[0] and player_coords[1] == chest_coords[1]:
             change_number = player_items[chest_item][1]
             change_number += 1
@@ -232,6 +240,7 @@ def map_movement(floor_number, moves, moves_desc, items, items_desc, player_stat
             chest_coords = [10, 10]
             
         if player_coords[0] == stair_coords[0] and player_coords[1] == stair_coords[1]:
+            print("\n ===----------NEXT LEVEL ----------=== \n")
             print("You traversed down the stairs")
             floor_number += 1
             floor, floor_borders = create_floor(floor, floor_number, floor_borders, floor_1_borders, floor_2_borders, floor_3_borders)
@@ -246,7 +255,7 @@ def map_movement(floor_number, moves, moves_desc, items, items_desc, player_stat
             prev_player_coords[0] = player_coords[0]
             prev_player_coords[1] = player_coords[1]
             if floor_number == 1:
-                print("\n ===---------- MOVEMENT ----------=== \n")
+                print("\n ===---------- FLOOR {} ----------=== \n".format(floor_number))
                 display(floor)
 
 def create_floor(create, floor_number, floor_borders, floor_1_borders, floor_2_borders, floor_3_borders):
@@ -290,6 +299,7 @@ def assign_items(floor_number, chest_coords, stair_coords, player_coords, prev_p
         chest_item = 6
         chest_coords = [3, 3]
         stair_coords = [6, 6]
+        player_coords = [0, 0]
         prev_player_coords = [0, 0]
         return chest_item, chest_coords, stair_coords, player_coords, prev_player_coords
         
@@ -321,13 +331,13 @@ def battle_start(moves, moves_desc, items, items_desc, player_stats, enemy_stats
             # Input for decisions on what to do, these include Fight, Bag, Run and Help
             option = input("Please choose your option: ").upper()
             print("")
-            if option == "F":
+            if option == "F" or option == "FIGHT":
                 turn_number, finished_battle, player_hp_sp, enemy_hp_sp = fight_command(turn_number, finished_battle, player_stats, enemy_stats, player_moves, enemy_moves, moves, moves_desc, player_hp_sp, enemy_hp_sp, enemy_gold, enemy_exp, gold, exp, max_hp, max_sp, items, player_items)
-            elif option == "B":
+            elif option == "B" or option == "BAG":
                 turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items = bag_command(turn_number, finished_battle, player_stats, enemy_stats, player_hp_sp, enemy_hp_sp, player_moves, enemy_moves, moves, items, items_desc, player_items, gold, enemy_gold, exp, enemy_exp)
-            elif option == "R":
+            elif option == "R" or option == "RUN":
                 turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items = run_command(turn_number, finished_battle, player_stats, enemy_stats, player_moves, enemy_moves, moves, player_hp_sp, enemy_hp_sp, player_items, items)
-            elif option == "H":
+            elif option == "H" or option == "HELP":
                 turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items = help_command(turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items, combat_help, item_help)
             else:
                 print("Please only input one of the 4 options")
@@ -927,8 +937,8 @@ def difficulty_setting():
     # Repeats the question until either Easy, Normal or Hard is chosen and then returns the choice back to main
     while chosen == False:
         print("What difficulty would you like?")
-        difficulty = input("Easy, Normal or Hard? ").title()
-        if difficulty != "Easy" and difficulty != "Normal" and difficulty != "Hard":
+        difficulty = input("Easy, Normal or Hard (E, N, H)? ").title()
+        if difficulty != "Easy" and difficulty != "Normal" and difficulty != "Hard" and difficulty != "H" and difficulty != "N" and difficulty != "E":
             print("Please only input one of the 3 options")
             chosen = False
         else:
