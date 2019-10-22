@@ -120,11 +120,17 @@ def main():
     NORMAL_MULTIPLIER = 2
     HARD_MULTIPLIER = 3
     story_wait = 2
+    start_wait = 4
     player_hp_sp = {"hp":player_stats["hp"], "sp":player_stats["sp"]}
     enemy_hp_sp = {"hp":enemy_stats["hp"], "sp":enemy_stats["sp"]} 
     print("""Welcome to: The Quest for the GOLDEN BRUSH!
-This game takes inspiration from Pokemon, Shin Megami Tensei and Final Fantasy""")
-    time.sleep(story_wait)
+===----------======----------======----------===
+This game takes inspiration from Pokemon, Shin Megami Tensei and Final Fantasy
+===----------======----------======----------===
+Map System code derived from @XTImpossible's Code on StackExchange
+Code can be found at this web address: https://codereview.stackexchange.com/questions/125286/moving-around-in-a-2d-grid
+===----------======----------======----------===""")
+    time.sleep(start_wait)
     # Checks what difficulty the user sets the game to, uses the multiplier to set difficulty
     while difficulty_set == False:
         difficulty = difficulty_setting()
@@ -193,7 +199,7 @@ This game takes inspiration from Pokemon, Shin Megami Tensei and Final Fantasy""
             color.write("\nYou Beat the Game!!", "STRING")
             return
     if enemy_stats["classifier"] == "Normal":
-        print("You Managed to make it to Floor {}".format(floor_number))
+        print("\nYou Managed to make it to Floor {}".format(floor_number))
         return
 
 def map_movement(floor_number, moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall):
@@ -241,7 +247,7 @@ def map_movement(floor_number, moves, moves_desc, items, items_desc, player_stat
             display(floor)
         enemy_hp_sp = {"hp":enemy_hp_sp_recall["hp"], "sp":enemy_hp_sp_recall["sp"]}
         # Asks for movement and asks the user what they would want to do
-        print("\nType: [w] = Up, [a] = Down, [s] = Left or [d] = Right to perform actions")
+        print("\nType: [w] = Up, [a] = Left, [s] = Down or [d] = Right to perform actions")
         movement = input("What would you like to do? ").lower().strip()
         # decides where to go based on users input, if input not in options then repeats
         if movement == "right" or movement == "d":
@@ -273,13 +279,13 @@ def map_movement(floor_number, moves, moves_desc, items, items_desc, player_stat
                 battle_start(moves, moves_desc, items, items_desc, player_stats, enemy_stats, player_moves, enemy_moves, player_items, combat_help, item_help, player_hp_sp, enemy_hp_sp, gold, enemy_gold, exp, enemy_exp, enemy_hp_sp_recall)
                 if player_hp_sp["hp"] <= 0:
                     finished_game = True
-                    return floor_number
+                    return floor_number, enemy_stats
         # if the player lands on a chest then they collect the item inside and the chest disappears by respawning off screen       
         if player_coords[0] == chest_coords[0] and player_coords[1] == chest_coords[1]:
             change_number = player_items[chest_item][1]
             change_number += 1
             player_items[chest_item] = player_items[chest_item][0], change_number
-            print("Found {}, You now have x{}".format(player_items[chest_item][0], player_items[chest_item][1]))
+            color.write("\nFound {}, You now have x{}".format(player_items[chest_item][0], player_items[chest_item][1]), "STRING")
             chest_coords = [10, 10]
         # if player lands on stairs then the map is replaced with the next one.
         if player_coords[0] == stair_coords[0] and player_coords[1] == stair_coords[1]:
@@ -301,7 +307,7 @@ def map_movement(floor_number, moves, moves_desc, items, items_desc, player_stat
                     return floor_number, enemy_stats
                 elif player_hp_sp["hp"] <= 0:
                     finished_game = True
-                    return floor_number
+                    return floor_number, enemy_stats
             # if not floor 3, goes to the next floor and reassigns the player, chest and stairs via new coords for the map 
             else:
                 floor_number += 1
@@ -761,6 +767,7 @@ def bag_command(turn_number, finished_battle, player_stats, enemy_stats, player_
     bag_partition = "\n===---------- ITEM USAGE ----------===\n"
     used_item = False
     print_no = 0
+    escape_chance = 0
     HP_LEVEL_INCREASE = 10
     SP_LEVEL_INCREASE = 5
     INFO_TAB_NO = 8
@@ -886,7 +893,7 @@ Thing it affects : {}""".format(item, items_desc[item], player_items[desc_decisi
         change_number = player_items[item_usage][1]
         change_number -= 1
         player_items[item_usage] = player_items[item_usage][0], change_number
-        if items[item][0] == "Escape" and escape_chance < items[item][1]:
+        if items[item][0] == "Escape" and escape_chance < items[item][1] and enemy_stats["classifier"] == "Normal":
             battle_ended = True
             
         if battle_ended == False:
@@ -940,14 +947,21 @@ def run_command(turn_number, finished_battle, player_stats, enemy_stats, player_
     run_chance = random.randint(1,100)
     print(run_partition)
     # checks run chance and rolls a random number to see if run is successful, if it doesnt work, uses up your turn, if it does then the user escapes the battle
-    if run_chance <= 50:
-        color.write("You Escaped the Battle!\n", "STRING")
-        print("Your brush has gained 0 EXP and you obtained 0 Gold!")
-        finished_battle = True
-        return turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items
-        
+    if enemy_stats["classifier"] == "Normal":
+        if run_chance <= 50:
+            color.write("You Escaped the Battle!\n", "STRING")
+            print("Your brush has gained 0 EXP and you obtained 0 Gold!")
+            finished_battle = True
+            return turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items
+            
+        else:
+            color.write("Couldn't Escape!\n", "COMMENT")
+            finished_battle = False
+            enemy_fight(finished_battle, player_stats, enemy_stats, player_moves, enemy_moves, moves, player_hp_sp, enemy_hp_sp)
+            turn_number += 1
+            return turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player_items
     else:
-        color.write("Couldn't Escape!\n", "COMMENT")
+        color.write("You couldn't escape!\n", "COMMENT")
         finished_battle = False
         enemy_fight(finished_battle, player_stats, enemy_stats, player_moves, enemy_moves, moves, player_hp_sp, enemy_hp_sp)
         turn_number += 1
@@ -971,7 +985,7 @@ def help_command(turn_number, finished_battle, player_hp_sp, enemy_hp_sp, player
 2. [Items]
 3. [BACK]
 """)
-        # If 1 or 2 is input, goes to a helps ection, if 3 is input, goes back to options
+        # If 1 or 2 is input, goes to a help section, if 3 is input, goes back to options
         try:
             help_decision = int(input("What would you like help with? (1/2/3) "))
             if help_decision == combat_help_no:
@@ -1043,6 +1057,8 @@ O O O O S
                 time.sleep(tutorial_wait)
                 print("You have 4 options on the map, all the 4 directions")
                 time.sleep(tutorial_wait)
+                print("You move using WASD.")
+                time.sleep(tutorial_wait)
                 print("You can also find chests and then go to the next floor")
                 time.sleep(tutorial_wait)
                 print("You are labelled X")
@@ -1064,7 +1080,7 @@ O O O O S
 [H] for Help
 ===----- EXAMPLE -----===\n""")
                 time.sleep(tutorial_wait)
-                print("In a battle, you have 4 Options; Fight, Bag, Run and Help")
+                print("In a battle, you have 4 Options; Fight, Items, Run and Help")
                 time.sleep(tutorial_wait)
                 print("\n===---------- FIGHT ----------===")
                 time.sleep(tutorial_wait)
@@ -1090,7 +1106,7 @@ O O O O S
                 time.sleep(tutorial_wait)
                 print("This will display all items in the game, and how many you have of them")
                 time.sleep(tutorial_wait)
-                print("For example, a Mini Mouthwash will heal you for 10HP, and use up the item")
+                print("For example, a Mini Mouthwash will heal you for 25HP, and use up the item")
                 time.sleep(tutorial_wait)
                 print("You can also check the info for all items whenever")
                 time.sleep(tutorial_wait)
